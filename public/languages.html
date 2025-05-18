@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Idiomas - GoonersLiar</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+</head>
+<body>
+  <div id="login-bar"></div>
+  <div id="app">
+    <div id="skill-tree"></div>
+    <a href="index.html" class="back-link">← Volver al Árbol Principal</a>
+  </div>
+
+  <script>
+    // Language constellation nodes
+    const nodes = [
+      { id: 'english', name: 'Inglés', x: 860, y: 580, unlocked: false },
+      { id: 'french', name: 'Francés', x: 1060, y: 580, unlocked: false },
+      { id: 'german', name: 'Alemán', x: 960, y: 480, unlocked: false },
+      { id: 'italian', name: 'Italiano', x: 960, y: 680, unlocked: false }
+    ];
+
+    // Constellation connections
+    const links = [
+      { source: 'english', target: 'german' },
+      { source: 'french', target: 'german' },
+      { source: 'french', target: 'italian' },
+      { source: 'english', target: 'italian' }
+    ];    // Initialize D3 visualization
+    function renderConstellation() {
+      const svg = d3.select('#skill-tree')
+        .append('svg')
+        .attr('width', '100vw')
+        .attr('height', '100vh')
+        .attr('viewBox', '0 0 1920 1080')
+        .style('position', 'fixed')
+        .style('top', '50%')
+        .style('left', '50%')
+        .style('transform', 'translate(-50%, -50%)');
+
+      // Create themed background
+      const defs = svg.append('defs');
+      
+      // Languages-themed nebula gradient (crystal/purple tones)
+      defs.append('radialGradient')
+        .attr('id', 'backgroundNebula')
+        .html(`
+          <stop offset="0%" stop-color="#4d1a5c"/>
+          <stop offset="50%" stop-color="#2f0f3d"/>
+          <stop offset="100%" stop-color="#1b0824"/>
+        `);
+
+      // Add the themed background
+      svg.append('rect')
+        .attr('width', '100%')
+        .attr('height', '100%')
+        .attr('fill', 'url(#backgroundNebula)');
+
+      // Add nebula effects
+      const nebulaGroup = svg.append('g').attr('class', 'nebula-effects');
+      const cloudCount = 3;
+      for (let i = 0; i < cloudCount; i++) {
+        const x = (i * 800) + Math.random() * 200;
+        const y = 200 + Math.random() * 600;
+        
+        nebulaGroup.append('circle')
+          .attr('cx', x)
+          .attr('cy', y)
+          .attr('r', 300 + Math.random() * 200)
+          .attr('fill', 'rgba(136, 55, 136, 0.1)')
+          .style('filter', 'blur(100px)');
+        
+        nebulaGroup.append('circle')
+          .attr('cx', x + 100)
+          .attr('cy', y - 50)
+          .attr('r', 200 + Math.random() * 150)
+          .attr('fill', 'rgba(166, 51, 166, 0.07)')
+          .style('filter', 'blur(80px)');
+      }
+
+      // Create starry background
+      const starCount = 150;
+      for (let i = 0; i < starCount; i++) {
+        const x = Math.random() * 1920;
+        const y = Math.random() * 1080;
+        svg.append('circle')
+          .attr('cx', x)
+          .attr('cy', y)
+          .attr('r', Math.random() * 1.5)
+          .attr('fill', '#ff88ff')
+          .attr('opacity', Math.random() * 0.8);
+      }
+
+      // Draw connections
+      links.forEach(link => {
+        const source = nodes.find(n => n.id === link.source);
+        const target = nodes.find(n => n.id === link.target);
+        
+        svg.append('line')
+          .attr('x1', source.x)
+          .attr('y1', source.y)
+          .attr('x2', target.x)
+          .attr('y2', target.y)
+          .attr('stroke', '#ffffff33')
+          .attr('stroke-width', 2);
+      });
+
+      // Draw nodes
+      nodes.forEach(node => {
+        const group = svg.append('g')
+          .attr('class', 'constellation-node')
+          .attr('transform', `translate(${node.x},${node.y})`);
+
+        // Node circle with crystal style
+        group.append('circle')
+          .attr('r', 15)
+          .attr('fill', '#ff88ff33')
+          .attr('stroke', '#ff88ff66')
+          .attr('stroke-width', 2)
+          .style('cursor', 'pointer')
+          .on('click', () => {
+            window.location.href = `languages/${node.id}.html`;
+          });
+
+        // Node label
+        group.append('text')
+          .attr('y', 30)
+          .attr('text-anchor', 'middle')
+          .attr('fill', '#fff')
+          .attr('font-size', '14px')
+          .text(node.name);
+      });
+    }
+
+    // Render on load
+    document.addEventListener('DOMContentLoaded', renderConstellation);
+  </script>
+  <script src="auth.js"></script>
+</body>
+</html>
