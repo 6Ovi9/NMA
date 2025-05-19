@@ -5,7 +5,7 @@ const fs = require('fs');
 const https = require('https');
 const http = require('http');
 const app = express();
-const PORT = 80;
+const PORT = process.env.PORT || 3000;
 const HOST = '0.0.0.0'; // Listen on all interfaces for hotspot
 const DOMAIN = 'universoazorin.duckdns.org';
 const IP = '137.101.20.115';
@@ -32,7 +32,7 @@ app.get('/', (req, res) => {
   res.sendFile(__dirname + '/public/index.html');
 });
 
-// Middleware to require login and unlocked skill for branch pages
+// Middleware to require login and unlocked skill for branch pages  
 const requireAuthAndSkill = (skillId) => (req, res, next) => {
   const auth = req.headers['authorization'];
   if (!auth) return res.status(401).send('No has iniciado sesión');
@@ -60,7 +60,7 @@ app.get('/technology.html', requireAuthAndSkill('technology'), (req, res) => res
 // Start HTTP server - Using hotspot connection
 app.listen(PORT, HOST, () => {
   console.log(`Server running on http://${HOST}:${PORT}`);
-  console.log(`Local access: http://localhost`);
+  console.log(`Local access: http://localhost:${PORT}`);
   console.log(`External access: http://${DOMAIN}`);
   console.log(`Direct IP access: http://${IP}`);
   console.log(`Hotspot IP: http://31.221.146.74`);
