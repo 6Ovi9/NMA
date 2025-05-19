@@ -64,14 +64,50 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('register-button')?.addEventListener('click', register);
     document.getElementById('logout-button')?.addEventListener('click', logout);
     
-    // Add QR code event listeners
-    document.getElementById('qr-scan-button')?.addEventListener('click', toggleQRScanner);
-    document.getElementById('qr-unlock-button')?.addEventListener('click', handleUnlock);
-    document.getElementById('qr-code-input')?.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-            handleUnlock();
-        }
-    });
+    // Add QR scanner initialization
+    const qrScanButton = document.getElementById('qr-scan-button');
+    if (qrScanButton) {
+        qrScanButton.addEventListener('click', async (e) => {
+            e.preventDefault();
+            // Check if running on mobile
+            const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+            
+            if (isMobile && !window.jsQR) {
+                // Load jsQR dynamically if not loaded
+                try {
+                    await new Promise((resolve, reject) => {
+                        const script = document.createElement('script');
+                        script.src = 'https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js';
+                        script.onload = resolve;
+                        script.onerror = reject;
+                        document.head.appendChild(script);
+                    });
+                } catch (err) {
+                    console.error('Failed to load QR scanner:', err);
+                    return;
+                }
+            }
+            
+            // Start QR scanner
+            toggleQRScanner();
+        });
+    }
+    
+    // Add unlock button handler
+    const unlockButton = document.getElementById('qr-unlock-button');
+    if (unlockButton) {
+        unlockButton.addEventListener('click', handleUnlock);
+    }
+    
+    // Handle Enter key in input
+    const qrInput = document.getElementById('qr-code-input');
+    if (qrInput) {
+        qrInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                handleUnlock();
+            }
+        });
+    }
 
     // Make sure menu is visible
     if (menuToggle) {
