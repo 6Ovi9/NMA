@@ -4,6 +4,17 @@ document.addEventListener('DOMContentLoaded', function() {
     let lastScannedCode = '';
     let lastScannedTime = 0;
 
+    async function checkCameraPermission() {
+        try {
+            // Check if we already have permission
+            const permissions = await navigator.permissions.query({ name: 'camera' });
+            return permissions.state;
+        } catch (err) {
+            console.log('Permissions API not supported, will try direct access');
+            return 'prompt'; // Default to prompt on browsers that don't support permission check
+        }
+    }
+
     window.toggleQRScanner = async function() {
         const container = document.getElementById('qr-scanner-container');
         const video = document.getElementById('qr-video');
@@ -13,38 +24,43 @@ document.addEventListener('DOMContentLoaded', function() {
         if (isActive) {
             button.innerHTML = '<i>⏹️</i> Detener Escáner';
             
-            // Add loading indicator
+            // Show permission request message
             container.innerHTML = `
-                <video id="qr-video" playsinline></video>
-                <div id="qr-scanner-overlay"></div>
-                <div id="loading-message" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:white;background:rgba(0,0,0,0.7);padding:10px;border-radius:5px;">
-                    Solicitando acceso a la cámara...
+                <div id="loading-message" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:white;background:rgba(0,0,0,0.8);padding:20px;border-radius:8px;text-align:center;max-width:80%;">
+                    <div style="margin-bottom:10px;">📸 Permiso de Cámara</div>
+                    <div>Para escanear códigos QR, necesitamos acceso a tu cámara.</div>
+                    <div style="margin-top:10px;font-size:0.9em;color:#aaa;">Por favor, acepta el permiso cuando aparezca.</div>
                 </div>
             `;
-            
+
             try {
+                // Check permission status first
+                const permissionStatus = await checkCameraPermission();
+                
+                if (permissionStatus === 'denied') {
+                    throw new Error('Camera permission denied');
+                }
+
                 // Request camera with explicit mobile support
-                const constraints = {
+                const stream = await navigator.mediaDevices.getUserMedia({ 
                     video: { 
                         facingMode: { ideal: 'environment' },
                         width: { ideal: 1280 },
                         height: { ideal: 720 }
                     }
-                };
-                
-                const stream = await navigator.mediaDevices.getUserMedia(constraints);
+                });
+
+                // Update container with video elements after permission granted
+                container.innerHTML = `
+                    <video id="qr-video" playsinline></video>
+                    <div id="qr-scanner-overlay"></div>
+                `;
+
                 const newVideo = document.getElementById('qr-video');
                 newVideo.srcObject = stream;
-                newVideo.setAttribute('playsinline', ''); // Required for iOS
-                
-                // Remove loading message once video is playing
-                newVideo.onloadedmetadata = () => {
-                    const loadingMsg = document.getElementById('loading-message');
-                    if (loadingMsg) loadingMsg.remove();
-                };
-                
+                newVideo.setAttribute('playsinline', '');
                 await newVideo.play();
-                
+
                 // Start QR detection loop
                 const canvas = document.createElement('canvas');
                 const context = canvas.getContext('2d');
@@ -100,13 +116,34 @@ document.addEventListener('DOMContentLoaded', function() {
                 
             } catch (err) {
                 console.error('Camera access error:', err);
-                container.innerHTML = `
-                    <div style="color:#fff;padding:1em;text-align:center;background:rgba(0,0,0,0.7);border-radius:5px;">
-                        No se pudo acceder a la cámara. Por favor, asegúrate de:
-                        <br>1. Dar permiso para usar la cámara
-                        <br>2. Usar un navegador compatible (Chrome, Safari)
-                    </div>
-                `;
+                
+                // Show appropriate error message based on error type
+                const errorMessage = err.name === 'NotAllowedError' || err.message === 'Camera permission denied'
+                    ? `
+                        <div style="text-align:center;padding:20px;color:white;background:rgba(0,0,0,0.8);border-radius:8px;">
+                            <div style="margin-bottom:10px;">❌ Acceso Denegado</div>
+                            <div>No se pudo acceder a la cámara porque el permiso fue denegado.</div>
+                            <div style="margin-top:15px;font-size:0.9em;">
+                                Para permitir el acceso:
+                                <ol style="text-align:left;margin-top:10px;">
+                                    <li>Haz clic en el icono 🔒 en la barra de direcciones</li>
+                                    <li>Selecciona "Permitir" para la cámara</li>
+                                    <li>Recarga la página</li>
+                                </ol>
+                            </div>
+                        </div>
+                    `
+                    : `
+                        <div style="text-align:center;padding:20px;color:white;background:rgba(0,0,0,0.8);border-radius:8px;">
+                            <div style="margin-bottom:10px;">❌ Error</div>
+                            <div>No se pudo acceder a la cámara.</div>
+                            <div style="margin-top:10px;font-size:0.9em;color:#aaa;">
+                                Asegúrate de que tu dispositivo tiene una cámara y de usar un navegador compatible.
+                            </div>
+                        </div>
+                    `;
+                
+                container.innerHTML = errorMessage;
                 button.innerHTML = '<i>📷</i> Escanear Código QR';
             }
         } else {
