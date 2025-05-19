@@ -35,8 +35,7 @@ menu.innerHTML = `
       <button class="scan-button" id="qr-scan-button">
         <i>📷</i> Escanear Código QR
       </button>
-      <div style="text-align:center;margin:0.5em 0;color:#fff8;font-size:0.9em;">- o -</div>
-      <input id="qr-code-input" placeholder="Introducir código (1-4)">
+      <div style="text-align:center;margin:0.5em 0;color:#fff8;font-size:0.9em;">- o -</div>      <input id="qr-code-input" placeholder="Introduce texto del QR">
       <button id="qr-unlock-button">Desbloquear</button>
       <div id="qr-message"></div>
     </div>

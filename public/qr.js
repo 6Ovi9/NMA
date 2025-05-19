@@ -2,6 +2,8 @@
 document.addEventListener('DOMContentLoaded', function() {
     // QR Scanner functionality
     let qrScanner = null;
+    let lastScannedCode = '';
+    let lastScannedTime = 0;
 
     window.toggleQRScanner = async function() {
         const container = document.getElementById('qr-scanner-container');
@@ -30,11 +32,40 @@ document.addEventListener('DOMContentLoaded', function() {
                 video.srcObject = stream;
                 await video.play();
                 
+                // Create canvas for QR scanning
+                const canvas = document.createElement('canvas');
+                const context = canvas.getContext('2d');
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                
                 // Start QR detection loop
+                function scanQRCode() {
+                    if (video.readyState === video.HAVE_ENOUGH_DATA) {
+                        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+                        const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+                        
+                        const code = jsQR(imageData.data, imageData.width, imageData.height, {
+                            inversionAttempts: "dontInvert",
+                        });
+                        
+                        if (code) {
+                            const now = Date.now();
+                            // Prevent multiple scans of the same code within 5 seconds
+                            if (code.data !== lastScannedCode || now - lastScannedTime > 5000) {
+                                lastScannedCode = code.data;
+                                lastScannedTime = now;
+                                handleQRCode(code.data);
+                            }
+                        }
+                    }
+                    qrScanner = requestAnimationFrame(scanQRCode);
+                }
+                
                 qrScanner = requestAnimationFrame(scanQRCode);
+                
             } catch (err) {
                 console.error('Camera access error:', err);
-                container.innerHTML = '<div style="color:#fff;padding:1em;text-align:center;">Camera access denied or not available</div>';
+                container.innerHTML = '<div style="color:#fff;padding:1em;text-align:center;">No se pudo acceder a la cámara. Por favor, asegúrate de dar permiso para usar la cámara.</div>';
             }
         } else {
             // Stop camera if scanner is deactivated

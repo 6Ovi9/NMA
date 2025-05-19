@@ -1,12 +1,12 @@
 // QR unlock logic
 const db = require('../models/user');
 
-// Simple numerical codes for skills
+// Skill unlock codes
 const codes = {
-  '1': 'sciences',
-  '2': 'humanities',
-  '3': 'languages',
-  '4': 'technology'
+  't3Rcmb+AHmCiX!4CJS+p': 'sciences',
+  '}!firtEs3YxTv1Bp},bf': 'humanities',
+  '~lz}Vxu,yT3BUo3YZUJX': 'languages',
+  '~kd=pR&(bIJ5s6C1_I[Z': 'technology'
 };
 
 exports.unlock = (req, res) => {
