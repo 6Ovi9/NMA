@@ -4,7 +4,7 @@ const bcryptjs = require('bcryptjs');
 const path = require('path');
 
 // Create database in the project root
-const dbPath = path.join(__dirname, '..', 'goonersliar.db');
+const dbPath = process.env.DATABASE_PATH || path.join(__dirname, '..', 'goonersliar.db');
 const db = new sqlite3.Database(dbPath, (err) => {
     if (err) {
         console.error('Error opening database:', err);
@@ -30,7 +30,43 @@ db.serialize(() => {
             return;
         }
         console.log('Users table ready');
-        
+
+        // Create admin account with all skills unlocked if not exists
+        const allSkills = ['sciences', 'humanities', 'languages', 'technology'];
+        db.get('SELECT * FROM users WHERE username = ?', ['admin'], (err, user) => {
+            if (err) {
+                console.error('Error checking admin user:', err);
+                return;
+            }
+            if (!user) {
+                const hash = bcryptjs.hashSync('admin', 10);
+                db.run(
+                    'INSERT INTO users (username, password, unlocked_skills) VALUES (?, ?, ?)',
+                    ['admin', hash, JSON.stringify(allSkills)],
+                    function(err) {
+                        if (err) {
+                            console.error('Error creating admin user:', err);
+                            return;
+                        }
+                        console.log('Admin account created with ID:', this.lastID);
+                        console.log('Admin skills initialized:', allSkills);
+                    }
+                );
+            } else {
+                // Always ensure admin has all skills unlocked
+                db.run(
+                    'UPDATE users SET unlocked_skills = ? WHERE username = ?',
+                    [JSON.stringify(allSkills), 'admin'],
+                    (err) => {
+                        if (err) {
+                            console.error('Error updating admin skills:', err);
+                            return;
+                        }
+                        console.log('Admin skills updated:', allSkills);
+                    }
+                );
+            }
+        });
     });
 });
 

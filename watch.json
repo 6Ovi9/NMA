@@ -1,0 +1,9 @@
+{
+  "install": {
+    "include": ["package.json"]
+  },
+  "restart": {
+    "include": ["*.js", "routes/**/*.js", "controllers/**/*.js", "models/**/*.js"]
+  },
+  "throttle": 1000
+}
